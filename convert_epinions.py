@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import snap
 
 H = snap.TIntStrH()
