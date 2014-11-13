@@ -1,20 +1,10 @@
 from graph_tool.all import *
 
-graph_file = 'data/advogato-daily/advogato-graph-latest.dot'
-# graph_file = 'data/test/test_advogato.dot'
-graph = load_graph(graph_file)
-capacities = [800, 200, 200, 50, 12, 4, 2, 1]
-
-def locate_seed_vertex(graph, seed):
-    for v in graph.vertices():
-        if graph.vp['vertex_name'][v] == seed:
-            return v
-
-def distance_to_capacity(dist, capacities, v, seed):
+def distance_to_capacity(dist, capacities, v, seed_v):
     d = min(dist[v], len(capacities) - 1)
     # If v is not the seed, then distance 0 associates to a
     # disconnected node. Always return 1.
-    if (d == 0) and (v != seed):
+    if (d == 0) and (v != seed_v):
         return 1
     return capacities[d]
 
@@ -32,9 +22,7 @@ class AssignDistanceVisitor(BFSVisitor):
 # Seed is the name of the trust seed.
 # Capacities is a list that maps distance-to-seed to
 # the assigned capacity.
-def compute_advogato_trust_metrics(graph, seed, capacities):
-    seed_v = locate_seed_vertex(graph, seed)
-
+def compute_advogato_trust_metrics(graph, seed_v, capacities):
     # Computes distance to seed.
     # Seed vertex AND disconnected vertices all have distance 0.
     dist = graph.new_vertex_property('int')
@@ -68,6 +56,3 @@ def compute_advogato_trust_metrics(graph, seed, capacities):
         sink_e = ss_graph.edge(minus_v, ss_sink_v)
         if residual_edge_caps[sink_e] == 0:
             print "%d[%s] is trustworthy." % (v, graph.vp['vertex_name'][v])
-
-ss_graph = compute_advogato_trust_metrics(graph, 'raph', capacities)
-
