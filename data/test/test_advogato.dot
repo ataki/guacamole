@@ -1,0 +1,6 @@
+strict digraph  {
+	raph -> jim	 [level=Master];
+	jim -> aric	 [level=Journeyer];
+	aric -> hongxia       [level=Journeyer];
+	jure;
+}
