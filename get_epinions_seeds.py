@@ -2,6 +2,7 @@
 
 import csv
 import snap
+import sys.argv
 
 src_f = "data/epinions/soc-sign-epinions.txt"
 G = snap.LoadEdgeList(snap.PNEANet, src_f, 1, 0)
@@ -31,6 +32,6 @@ for NI in G.Nodes():
     if score > maxScore:
         maxScore = score
         numNeighbors = NI.GetOutDeg()
-    topNode = srcId
+        topNode = srcId
 
 print "node %d, score %d, num neighbors %d" % (topNode, maxScore, numNeighbors)
