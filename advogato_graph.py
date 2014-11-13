@@ -12,5 +12,7 @@ capacities = [800, 200, 200, 50, 12, 4, 2, 1]
 
 graph = load_graph(graph_file)
 seed_v = locate_seed_vertex(graph, seed)
-ss_graph = tm.compute_advogato_trust_metrics(graph, seed_v, capacities)
+trusted_v = tm.compute_advogato_trust_metrics(graph, seed_v, capacities)
+# trusted_v = tm.compute_advogato_trust_metrics(graph, seed_v, 8000)
+print len(trusted_v)
 

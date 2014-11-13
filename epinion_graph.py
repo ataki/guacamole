@@ -5,5 +5,5 @@ graph_file = 'data/epinions/epinions.dot',
 capacities = [800, 200, 200, 50, 12, 4, 2, 1]
 
 graph = load_graph(graph_file)
-ss_graph = tm.compute_advogato_trust_metrics(graph, seed, capacities)
+tm.compute_advogato_trust_metrics(graph, seed, capacities)
 
