@@ -10,6 +10,21 @@ sink_size = 15
 trusted_size = 5
 untrusted_size = 2
 
+# Modifies the graph, converts all vertices in seeds into one virtual seed vertex.
+def virtual_seed_graph(graph, seeds):
+    seed_v = graph.add_vertex()
+    for v in seeds:
+        for out_v in v.out_neighbours():
+            graph.add_edge(seed_v, out_v)
+
+    # Clears in- and out- degrees of seeds other than the virtual seed.
+    # These original seeds will be isolated in the single-source-sink graph and
+    # therefore will not influence the result.
+    for v in seeds:
+        graph.clear_vertex(graph.vertex(v))
+
+    return seed_v
+
 def distance_to_capacity(dist, capacities, v, seed_v):
     d = min(dist[v], len(capacities) - 1)
     # If v is not the seed, then distance 0 associates to a
@@ -88,7 +103,6 @@ def compute_advogato_trust_metrics(graph, seed_v, capacities, plot=False):
     ss_graph.add_vertex(graph.num_vertices() * 2 + 1)
     ss_seed_v = ss_graph.vertex(seed_v)
     ss_sink_v = ss_graph.vertex(graph.num_vertices() * 2)
-    #edge_caps = ss_graph.new_edge_property('float')
     edge_caps = ss_graph.new_edge_property('int')
     for v in graph.vertices():
         minus_v = ss_graph.vertex(v)
@@ -114,7 +128,7 @@ def compute_advogato_trust_metrics(graph, seed_v, capacities, plot=False):
         sink_e = ss_graph.edge(minus_v, ss_sink_v)
         if res[sink_e] == 0:
             trusted_v += [v]
-            print "%d[%s] is trustworthy." % (v, graph.vp['vertex_name'][v])
+            # print "%d[%s] is trustworthy." % (v, graph.vp['vertex_name'][v])
 
     if plot:
         res.a = edge_caps.a - res.a # Actual flow
