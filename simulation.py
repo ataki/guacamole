@@ -58,8 +58,10 @@ def run_simulation(graph_type, attack_scale, attack_mode, edge_sample_rate=1.0, 
     for i in range(num_experiments):
         logger.add_trusted_nodes_after_attack('attack-%d' % (i + 1), results[i])
 
+    print "Writing to log..."
     logger.write()
     plot_title = '%s: %s-attack with scale %d' % (print_graph_type(graph_type), print_attack_mode(attack_mode), attack_scale)
+    print "Plotting..."
     logger.plot_roc(plot_title, x, y)
 
 num_experiments = 100

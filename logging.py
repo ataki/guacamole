@@ -13,7 +13,7 @@ class SimulationLogger:
     def __init__(self):
         current_time = datetime.datetime.now().strftime("%H:%M:%S")
         self.log = LOG_DIR + ('log-%s' % current_time)
-        self.plot = PLOT_DIR + ('plot-%s' % current_time)
+        self.plot = PLOT_DIR + ('plot-%s.png' % current_time)
         open(self.log, 'a')
         self.data = {}
         self.comment = ''
@@ -38,12 +38,12 @@ class SimulationLogger:
         }
 
     def add_trusted_nodes(self, trusted_nodes):
-        self.data['trusted_nodes'] = trusted_nodes
+        self.data['trusted_nodes'] = [int(node) for node in trusted_nodes]
 
     def add_trusted_nodes_after_attack(self, attack_id, trusted_nodes):
-        if 'add_trusted_nodes_after_attack' in self.data:
+        if 'add_trusted_nodes_after_attack' not in self.data:
             self.data['add_trusted_nodes_after_attack'] = {}
-        self.data['add_trusted_nodes_after_attack'][attack_id] = trusted_nodes
+        self.data['add_trusted_nodes_after_attack'][attack_id] = [int(node) for node in trusted_nodes]
 
     def write(self):
         with open(self.log, 'a') as log:
