@@ -41,7 +41,7 @@ class SimulationLogger:
         self.data['trusted_nodes'] = trusted_nodes
 
     def add_trusted_nodes_after_attack(self, attack_id, trusted_nodes):
-        if 'add_trusted_nodes_after_attack' in self.data:
+        if 'add_trusted_nodes_after_attack' not in self.data:
             self.data['add_trusted_nodes_after_attack'] = {}
         self.data['add_trusted_nodes_after_attack'][attack_id] = trusted_nodes
 
