@@ -12,6 +12,3 @@ This repo contains the dataset and code that implements different trust metrics 
 - Aric Bartle
 - Hongxia Zhong
 - Jim Zheng (http://github.com/ataki)
-
-
-

@@ -45,7 +45,7 @@ def _get_seeds(graph, num_seeds):
     return [v for v_trust, v in seeds]
 
 
-def _normalize_random_graph(graph, sample_rate=1.0):
+def _normalize_random_graph(graph, sample_rate):
     g = Graph()
     g.add_vertex(graph.num_vertices())
     eprop = graph.edge_properties['label']
@@ -57,6 +57,15 @@ def _normalize_random_graph(graph, sample_rate=1.0):
                 g.add_edge(e.target(), e.source())
     return g
 
+def _sample_edges(graph, sample_rate):
+    if sample_rate < 1.0:
+        g = Graph()
+        g.add_vertex(graph.num_vertices())
+        for e in graph.edges():
+            if random.random() < sample_rate:
+                g.add_edge(e.source(), e.target())
+        graph = g
+
 def _get_seeds_by_name(graph, seeds):
     seed_vs = []
     for v in graph.vertices():
@@ -64,20 +73,21 @@ def _get_seeds_by_name(graph, seeds):
             seed_vs.append(v)
     return seed_vs
 
-def random_trust_graph():
+def random_trust_graph(edge_sample_rate):
     num_seeds = 4
     random_graph = load_graph('data/random/random.dot')
 
-    graph = _normalize_random_graph(random_graph, 0.5)
     seeds = _get_seeds(random_graph, num_seeds)
+    graph = _normalize_random_graph(random_graph, edge_sample_rate)
 
     seed_v = _transform_virtual_seed(graph, seeds)
     capacities = [800 * num_seeds, 200, 200, 50, 12, 4, 2, 1]
     return TrustGraph(graph, seed_v, capacities)
 
-def advogato_trust_graph():
+def advogato_trust_graph(edge_sample_rate):
     graph = load_graph('data/advogato-daily/advogato-graph-latest.dot')
     seeds = _get_seeds_by_name(graph, ['raph', 'miguel', 'federico', 'alan'])
+    _sample_edges(graph, edge_sample_rate)
     seed_v = _transform_virtual_seed(graph, seeds)
     capacities = [800 * 4, 200, 200, 50, 12, 4, 2, 1]
     return TrustGraph(graph, seed_v, capacities)
