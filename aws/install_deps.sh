@@ -141,5 +141,7 @@ GNf6qXlf4+tPchA9EIEukfiFrApLDD7kY2F09sQCZp56jgEg
 -----END PGP PUBLIC KEY BLOCK-----" >> apt-pubkey
 apt-key add apt-pubkey
 apt-get update
+apt-get install python-pip -y
 apt-get install libboost-all-dev -y
 apt-get install python-graph-tool -y
+apt-get install Gnuplot -y
