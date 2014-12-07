@@ -1,20 +1,17 @@
 import metrics
+from params import *
 
 import numpy
 from graph_tool.all import *
 
-def _sample_by_distance(distances, sampleSize, sampleTimes):
-    # maxDist = max(distances.values())
-    # probs = [(float)x/maxDist for x in distances.values()]
-    # total = sum(probs)
-    # probs = [(float)x/total for x in probs]
+def _sample_by_distance(distances, sample_size, sample_times):
+    probs = [float(x) / sum(distances.values()) for x in distances.values()]
+
+    sample = []
+    for i in range(sample_times):
+        sample.append(numpy.random.choice(distances.keys(), sample_size, replace=False, p=probs))
         
-    # samplesCollection = sampleTimes*[[]]
-    # for i in range(0, sampleTimes):
-    #     samplesCollection[i] = numpy.random.choice(len(probs), sampleSize, replace=False, p=probs)
-        
-    # return samplesCollection
-    return []
+    return sample
 
 # Subclass of BFSVisitor.
 # Assigns a distance to each vertex during BFS.
@@ -42,3 +39,30 @@ class TrustGraph:
 
     def sample_compromised_nodes(self, sample_size):
         return _sample_by_distance(self.distances, sample_size, 1)[0]
+
+    def get_attacked_graph(self, attack_scale, attack_mode):
+        attacked_graph = Graph(self.graph)
+        compromised_nodes = self.sample_compromised_nodes(attack_scale)
+        edges_modified = 0
+
+        for v in compromised_nodes:
+            for e in attacked_graph.vertex(v).out_edges():
+                edges_modified += 1
+                attacked_graph.remove_edge(e)
+
+            if attack_mode == REVERSE:
+                for w in attacked_graph.vertices():
+                    if v != w and self.graph.edge(v, w) == None:
+                        edges_modified += 1
+                        attacked_graph.add_edge(v, w)
+
+            if attack_mode == TARGETED:
+                for w in compromised_nodes:
+                    if v != w:
+                        if self.graph.edge(v, w) != None:
+                            edges_modified -= 1
+                        else:
+                            edges_modified += 1
+                        attacked_graph.add_edge(v, w)
+
+        return TrustGraph(attacked_graph, self.seed, self.capacities), edges_modified
