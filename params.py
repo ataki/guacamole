@@ -2,7 +2,7 @@
 DELETE, REVERSE, TARGETED = 1, 2, 3
 
 # graph type
-RANDOM_GRAPH, ADVOGATO_GRAPH = 4, 5
+RANDOM_GRAPH, ADVOGATO_GRAPH = 1, 2
 
 def print_graph_type(graph_type):
     return {

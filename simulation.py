@@ -2,6 +2,7 @@ from trust_graph import TrustGraph
 from params import *
 import graphs
 from logging import SimulationLogger
+import argparse
 
 def _test_attack_resistance(graph, num_experiments, attack_scale, attack_mode):
     results = []
@@ -16,7 +17,13 @@ def _test_attack_resistance(graph, num_experiments, attack_scale, attack_mode):
 
     return results, percent_edge_compromised
 
-def _prepare_roc_plot(trusted_nodes, results):
+def _accumulate_list(l):
+    s = 0
+    for i in range(len(l)):
+        l[i] += s
+        s = l[i]
+
+def _prepare_roc_plot(trusted_nodes, results, sorted=True):
     # false_positives are nodes that are trusted after the attack, but should not be trusted
     # false_negatives are nodes that are not trusted, but should be trusted
     false_positives, true_positives = 0, 0
@@ -31,11 +38,19 @@ def _prepare_roc_plot(trusted_nodes, results):
                 false_positives += 1
                 xe += 1
 
-        x.append(xe + (x[-1] if len(x) > 0 else 0))
-        y.append(ye + (y[-1] if len(y) > 0 else 0))
+        # x.append(xe + (x[-1] if len(x) > 0 else 0))
+        # y.append(ye + (y[-1] if len(y) > 0 else 0))
+        x.append(xe)
+        y.append(ye)
+    sorted_yx = zip(y, x)
+    sorted_yx.sort(reverse=True)
+    sorted_x = [x for (y, x) in sorted_yx]
+    sorted_y = [y for (y, x) in sorted_yx]
+    _accumulate_list(sorted_x)
+    _accumulate_list(sorted_y)
 
-    x = [(float(e)/false_positives if false_positives > 0 else 0) for e in x]
-    y = [(float(e)/true_positives if true_positives > 0 else 0) for e in y]
+    x = [(float(e)/false_positives if false_positives > 0 else 0) for e in sorted_x]
+    y = [(float(e)/true_positives if true_positives > 0 else 0) for e in sorted_y]
     return x, y
 
 def run_simulation(graph_type, attack_scale, attack_mode, edge_sample_rate=1.0, comment=''):
@@ -50,7 +65,7 @@ def run_simulation(graph_type, attack_scale, attack_mode, edge_sample_rate=1.0, 
 
     trusted_nodes = graph.get_trusted_nodes()
     results, percent_edge_compromised = _test_attack_resistance(graph, num_experiments, attack_scale, attack_mode)
-    x, y = _prepare_roc_plot(trusted_nodes, results)
+    x, y = _prepare_roc_plot(trusted_nodes, results, True)
 
     logger.add_configuration(graph_type, attack_scale, attack_mode, edge_sample_rate, percent_edge_compromised)
     logger.add_trusted_nodes(trusted_nodes)
@@ -64,5 +79,17 @@ def run_simulation(graph_type, attack_scale, attack_mode, edge_sample_rate=1.0, 
     print "Plotting..."
     logger.plot_roc(plot_title, x, y)
 
-num_experiments = 100
-run_simulation(RANDOM_GRAPH, 1, DELETE, edge_sample_rate=0.5, comment='Random graph has 2x edges, so edge_sample_rate is 50\%')
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s', '--scale', type=int, default=1)
+    # DELETE, REVERSE, TARGETED = 1, 2, 3
+    parser.add_argument('-m', '--mode', type=int, default=1)
+    # RANDOM_GRAPH, ADVOGATO_GRAPH = 1, 2
+    parser.add_argument('-g', '--graph', type=int, default=1)
+    parser.add_argument('-r', '--sample', type=float, default=1.0)
+    parser.add_argument('-e', '--num_experiments', type=int, default=100)
+    parser.add_argument('-c', '--comments', default='')
+    args = parser.parse_args()
+
+    num_experiments = args.num_experiments
+    run_simulation(args.graph, args.scale, args.mode, edge_sample_rate=args.sample, comment=args.comments)
