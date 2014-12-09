@@ -2,6 +2,7 @@ import metrics
 from params import *
 
 import numpy
+
 from graph_tool.all import *
 
 def _sample_by_distance(distances, sample_size, sample_times):

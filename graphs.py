@@ -1,13 +1,14 @@
-from trust_graph import TrustGraph
 from params import *
+from trust_graph import TrustGraph
 
+import argparse
 import datetime
 import heapq
 import math
+import numpy
 import random
-from graph_tool.all import *
-import argparse
 
+from graph_tool.all import *
 import Gnuplot
 Gnuplot.GnuplotOpts.default_term = 'png'
 
@@ -52,6 +53,16 @@ def _get_seeds(graph, num_seeds):
 
 
 def _normalize_random_graph(graph, sample_rate):
+    # g = Graph()
+    # g.add_vertex(graph.num_vertices())
+    # eprop = graph.edge_properties['label']
+    # for e in graph.edges():
+    #     if eprop[e] == '+':
+    #         if random.random() < sample_rate:
+    #             g.add_edge(e.source(), e.target())
+    #         if random.random() < sample_rate:
+    #             g.add_edge(e.target(), e.source())
+    # return g
     g = Graph()
     g.add_vertex(graph.num_vertices())
     eprop = graph.edge_properties['label']
@@ -59,8 +70,12 @@ def _normalize_random_graph(graph, sample_rate):
         if eprop[e] == '+':
             if random.random() < sample_rate:
                 g.add_edge(e.source(), e.target())
-            if random.random() < sample_rate:
                 g.add_edge(e.target(), e.source())
+            else:
+                if random.random() < 0.5:
+                    g.add_edge(e.target(), e.source())
+                else:
+                    g.add_edge(e.source(), e.target())
     return g
 
 def _sample_edges(graph, sample_rate):
@@ -81,7 +96,7 @@ def _get_seeds_by_name(graph, seeds):
 
 def random_trust_graph(edge_sample_rate):
     num_seeds = 4
-    random_graph = load_graph('data/random/random_2.dot')
+    random_graph = load_graph('data/random/random_1.dot')
 
     seeds = _get_seeds(random_graph, num_seeds)
     graph = _normalize_random_graph(random_graph, edge_sample_rate)
@@ -152,6 +167,17 @@ def get_property(graph_type, edge_sample_rate, property_type, comments):
         x = range(graph.num_vertices())
         y = sorted(distances, reverse=True)
         plot_prop("Seed-to-Node Shortest Path Distribution - %s" % print_graph_type(graph_type), x, y)
+    if property_type == ESTIMATED_DIAMETER:
+        max_diamater = 0
+        for source in numpy.random.choice(range(graph.num_vertices()), 100, replace=False):
+            max_diamater = max(max_diamater, pseudo_diameter(graph, source)[0])
+        print max_diamater
+    if property_type == PERCENT_BY_DIRECTIONAL_EDGE:
+        num_by_directional_edge = 0
+        for e in graph.edges():
+            if graph.edge(e.target(), e.source()) != None:
+                num_by_directional_edge += 1
+        print float(num_by_directional_edge)/graph.num_edges()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -161,6 +187,8 @@ if __name__ == '__main__':
     # GLOBAL_CLUSTERING_COEFFICIENT = 4
     # DISTANCES = 5
     # SEED_DISTANCES = 6
+    # ESTIMATED_DIAMETER = 7
+    # PERCENT_BY_DIRECTIONAL_EDGE = 8
     parser.add_argument('-p', '--property', type=int, default=1)
     # RANDOM_GRAPH, ADVOGATO_GRAPH = 1, 2
     parser.add_argument('-g', '--graph', type=int, default=1)
@@ -169,7 +197,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.property == 0:
-        for p in range(1, 7):
+        for p in range(1, 9):
             get_property(args.graph, args.sample, p, args.comments)
     else:
         get_property(args.graph, args.sample, args.property, args.comments)

@@ -1,7 +1,8 @@
-from trust_graph import TrustGraph
-from params import *
 import graphs
 from logging import SimulationLogger
+from params import *
+from trust_graph import TrustGraph
+
 import argparse
 
 def _test_attack_resistance(graph, num_experiments, attack_scale, attack_mode):
