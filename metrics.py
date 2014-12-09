@@ -29,11 +29,10 @@ class ManualCapacityVisitor(BFSVisitor):
         self.cap[e.target()] = _distance_to_capacity(self.dist, self.capacities, e.target(), self.seed_v)
 
 class AutoCapacityVisitor(BFSVisitor):
-    def __init__(self, dist, out_degrees, num_vertices, init_cap):
+    def __init__(self, dist, out_degrees, num_vertices):
         self.dist = dist
         self.out_degrees = out_degrees
         self.num_vertices = num_vertices
-        self.init_cap = init_cap
 
         # Adds the seed to l=0.
         self.num_vertices[0] = 1
@@ -62,7 +61,7 @@ def advogato_trust_metric_results(graph, seed_v, capacities):
     else:
         out_degrees = {}
         num_vertices = {}
-        bfs_search(graph, seed_v, AutoCapacityVisitor(dist, out_degrees, num_vertices, capacities))
+        bfs_search(graph, seed_v, AutoCapacityVisitor(dist, out_degrees, num_vertices))
         max_dist = max(num_vertices.keys())
         max_cap = capacities
         capacities = [max_cap]

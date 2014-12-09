@@ -1,3 +1,4 @@
+from metrics import AutoCapacityVisitor
 from params import *
 from trust_graph import TrustGraph
 
@@ -80,6 +81,12 @@ def _get_seeds_by_name(graph, seeds):
             seed_vs.append(v)
     return seed_vs
 
+def _edge_exists(graph, n1, n2):
+    return graph.edge(n1, n2) != None or graph.edge(n2, n1) != None
+
+def _triad_exists(graph, n1, n2, n3):
+    return _edge_exists(graph, n1, n2) and _edge_exists(graph, n2, n3) and _edge_exists(graph, n1, n3)
+
 def random_trust_graph(edge_sample_rate, graph_type):
     num_seeds = 4
 
@@ -121,7 +128,7 @@ def plot_prop(title, x, y, x_label, y_label, log_scale=False):
         g('set format y "10^{%L}"')
         g('set mytics 10')
     g.xlabel(x_label)
-    g.ylabel(y_lbael)
+    g.ylabel(y_label)
     data = Gnuplot.Data(x, y, with_='linespoints pt 6')
     g.plot(data)
 
@@ -142,6 +149,7 @@ def get_property(graph_type, edge_sample_rate, property_type, comments):
             'node degrees',
             '# nodes',
             True)
+    
     if property_type == OUT_DEGREE_DISTRIBUTION:
         dd = vertex_hist(graph, "out")
         plot_prop("%s - %s" % (print_property_type(property_type), print_graph_type(graph_type)),
@@ -149,14 +157,17 @@ def get_property(graph_type, edge_sample_rate, property_type, comments):
             'node degrees',
             '# nodes',
             True)
+    
     if property_type == LOCAL_CLUSTERING_COEFFICIENT:
         clust = local_clustering(graph)
         x = range(graph.num_vertices())
         y = sorted(clust.get_array(), reverse=True)
         plot_prop("%s - %s" % (print_property_type(property_type), print_graph_type(graph_type)),
             x, y, 'nodes', 'clustering coefficients')
+    
     if property_type == GLOBAL_CLUSTERING_COEFFICIENT:
         print "%s: %f" % (print_property_type(property_type), global_clustering(graph)[0])
+    
     if property_type == DISTANCES:
         diameters = []
         for v in graph.vertices():
@@ -165,6 +176,7 @@ def get_property(graph_type, edge_sample_rate, property_type, comments):
         y = sorted(diameters, reverse=True)
         plot_prop("%s - %s" % (print_property_type(property_type), print_graph_type(graph_type)),
             x, y, 'sources', 'estimated distances')
+    
     if property_type == SEED_DISTANCES:
         distances = shortest_distance(graph, source=seed)
         distances = [(dist if dist < 2147483647 else 0) for dist in distances.get_array()]
@@ -172,11 +184,13 @@ def get_property(graph_type, edge_sample_rate, property_type, comments):
         y = sorted(distances, reverse=True)
         plot_prop("%s - %s" % (print_property_type(property_type), print_graph_type(graph_type)),
             x, y, 'destination nodes', 'distances')
+    
     if property_type == ESTIMATED_DIAMETER:
         max_diamater = 0
         for source in numpy.random.choice(range(graph.num_vertices()), 100, replace=False):
             max_diamater = max(max_diamater, pseudo_diameter(graph, source)[0])
         print "%s: %d" % (print_property_type(property_type), max_diamater)
+    
     if property_type == PERCENT_BY_DIRECTIONAL_EDGE:
         num_by_directional_edge = 0
         for e in graph.edges():
@@ -184,6 +198,28 @@ def get_property(graph_type, edge_sample_rate, property_type, comments):
                 num_by_directional_edge += 1
         print "%s: %f" % (print_property_type(property_type),
             float(num_by_directional_edge)/graph.num_edges())
+    
+    if property_type == AVERAGE_OUT_DEGREE_PER_LEVEL:
+        dist_prop = graph.new_vertex_property('int')
+        out_degrees, num_vertices = {}, {}
+        bfs_search(graph, seed, AutoCapacityVisitor(dist_prop, out_degrees, num_vertices))
+        max_dist = max(num_vertices.keys())
+
+        average_out_degree = []
+        for dist in range(max_dist):
+            average_out_degree.append(float(out_degrees[dist])/num_vertices[dist])
+
+        plot_prop("%s - %s" % (print_property_type(property_type), print_graph_type(graph_type)),
+            range(1, max_dist), average_out_degree[1:], 'distances from seed', 'average out degree')
+
+    if property_type == TRIADS:
+        sample_size = 100000
+        num_triads = 0
+        for i in range(sample_size):
+            triad = numpy.random.choice(range(graph.num_vertices()), 3, replace=False)
+            if _triad_exists(graph, triad[0], triad[1], triad[2]):
+                num_triads += 1
+        print "%s: %f" % (print_property_type(property_type), float(num_triads)/sample_size)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -204,10 +240,8 @@ if __name__ == '__main__':
     if args.sample == None:
         args.sample = 1.0 if (args.graph == ADVOGATO_GRAPH) else 0.5
 
-    print 'Sampling at %f' % args.sample
-
     if args.property == 0:
-        for p in range(1, 9):
+        for p in range(1, 11):
             get_property(args.graph, args.sample, p, args.comments)
     else:
         get_property(args.graph, args.sample, args.property, args.comments)

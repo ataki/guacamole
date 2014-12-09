@@ -16,6 +16,8 @@ DISTANCES = 5
 SEED_DISTANCES = 6
 ESTIMATED_DIAMETER = 7
 PERCENT_BY_DIRECTIONAL_EDGE = 8
+AVERAGE_OUT_DEGREE_PER_LEVEL = 9
+TRIADS = 10
 
 def print_graph_type(graph_type):
     return {
@@ -41,5 +43,7 @@ def print_property_type(property_mode):
         DISTANCES: 'Diameters Estimated at Each Vertex',
         SEED_DISTANCES: 'Shortest Path Lengths from Seed',
         ESTIMATED_DIAMETER: 'Diameter',
-        PERCENT_BY_DIRECTIONAL_EDGE: 'Percentage of By-Directional Edges'
+        PERCENT_BY_DIRECTIONAL_EDGE: 'Percentage of By-Directional Edges',
+        AVERAGE_OUT_DEGREE_PER_LEVEL: 'Average Out-Degree per Distance Level',
+        TRIADS: 'Percentage of Triads'
     }[property_mode]
