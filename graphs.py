@@ -81,7 +81,7 @@ def _get_seeds_by_name(graph, seeds):
 
 def random_trust_graph(edge_sample_rate):
     num_seeds = 4
-    random_graph = load_graph('data/random/random.dot')
+    random_graph = load_graph('data/random/random_2.dot')
 
     seeds = _get_seeds(random_graph, num_seeds)
     graph = _normalize_random_graph(random_graph, edge_sample_rate)
@@ -160,6 +160,7 @@ if __name__ == '__main__':
     # LOCAL_CLUSTERING_COEFFICIENT = 3
     # GLOBAL_CLUSTERING_COEFFICIENT = 4
     # DISTANCES = 5
+    # SEED_DISTANCES = 6
     parser.add_argument('-p', '--property', type=int, default=1)
     # RANDOM_GRAPH, ADVOGATO_GRAPH = 1, 2
     parser.add_argument('-g', '--graph', type=int, default=1)
@@ -167,4 +168,8 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--comments', default='')
     args = parser.parse_args()
 
-    get_property(args.graph, args.sample, args.property, args.comments)
+    if args.property == 0:
+        for p in range(1, 7):
+            get_property(args.graph, args.sample, p, args.comments)
+    else:
+        get_property(args.graph, args.sample, args.property, args.comments)
