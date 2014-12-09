@@ -59,10 +59,10 @@ def run_simulation(graph_type, attack_scale, attack_mode, edge_sample_rate=1.0, 
     logger.add_comment(comment)
     
     print "Initializing graph..."
-    if graph_type == RANDOM_GRAPH:
-        graph = graphs.random_trust_graph(edge_sample_rate)
     if graph_type == ADVOGATO_GRAPH:
         graph = graphs.advogato_trust_graph(edge_sample_rate)
+    else:
+        graph = graphs.random_trust_graph(edge_sample_rate, graph_type)
 
     trusted_nodes = graph.get_trusted_nodes()
     results, percent_edge_compromised = _test_attack_resistance(graph, num_experiments, attack_scale, attack_mode)
@@ -87,10 +87,13 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--mode', type=int, default=1)
     # RANDOM_GRAPH, ADVOGATO_GRAPH = 1, 2
     parser.add_argument('-g', '--graph', type=int, default=1)
-    parser.add_argument('-r', '--sample', type=float, default=1.0)
+    parser.add_argument('-r', '--sample', type=float)
     parser.add_argument('-e', '--num_experiments', type=int, default=100)
     parser.add_argument('-c', '--comments', default='')
     args = parser.parse_args()
+
+    if args.sample == None:
+        args.sample = 1.0 if (args.graph == ADVOGATO_GRAPH) else 0.5
 
     num_experiments = args.num_experiments
     run_simulation(args.graph, args.scale, args.mode, edge_sample_rate=args.sample, comment=args.comments)

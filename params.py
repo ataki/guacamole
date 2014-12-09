@@ -2,7 +2,10 @@
 DELETE, REVERSE, TARGETED = 1, 2, 3
 
 # graph type
-RANDOM_GRAPH, ADVOGATO_GRAPH = 1, 2
+ADVOGATO_GRAPH = 1
+RANDOM_GRAPH = 2
+LARGE_RANDOM_GRAPH = 3
+SMALL_RANDOM_GRAPH =  4
 
 # property type
 IN_DEGREE_DISTRIBUTION = 1
@@ -16,8 +19,10 @@ PERCENT_BY_DIRECTIONAL_EDGE = 8
 
 def print_graph_type(graph_type):
     return {
+        ADVOGATO_GRAPH: 'advogato graph',
         RANDOM_GRAPH: 'random graph',
-        ADVOGATO_GRAPH: 'advogato graph'
+        LARGE_RANDOM_GRAPH: '4x random graph',
+        SMALL_RANDOM_GRAPH: '0.25x random graph'
     }[graph_type]
 
 def print_attack_mode(attack_mode):
@@ -26,3 +31,15 @@ def print_attack_mode(attack_mode):
         REVERSE: 'reverse',
         TARGETED: 'targeted'
     }[attack_mode]
+
+def print_property_type(property_mode):
+    return {
+        IN_DEGREE_DISTRIBUTION: 'In-Degree Distribution',
+        OUT_DEGREE_DISTRIBUTION: 'Out-Degree Distribution',
+        LOCAL_CLUSTERING_COEFFICIENT: 'Local Clustering Coefficient',
+        GLOBAL_CLUSTERING_COEFFICIENT: 'Global Clustering Coefficient',
+        DISTANCES: 'Diameters Estimated at Each Vertex',
+        SEED_DISTANCES: 'Shortest Path Lengths from Seed',
+        ESTIMATED_DIAMETER: 'Diameter',
+        PERCENT_BY_DIRECTIONAL_EDGE: 'Percentage of By-Directional Edges'
+    }[property_mode]

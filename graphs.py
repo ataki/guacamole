@@ -53,16 +53,6 @@ def _get_seeds(graph, num_seeds):
 
 
 def _normalize_random_graph(graph, sample_rate):
-    # g = Graph()
-    # g.add_vertex(graph.num_vertices())
-    # eprop = graph.edge_properties['label']
-    # for e in graph.edges():
-    #     if eprop[e] == '+':
-    #         if random.random() < sample_rate:
-    #             g.add_edge(e.source(), e.target())
-    #         if random.random() < sample_rate:
-    #             g.add_edge(e.target(), e.source())
-    # return g
     g = Graph()
     g.add_vertex(graph.num_vertices())
     eprop = graph.edge_properties['label']
@@ -70,12 +60,8 @@ def _normalize_random_graph(graph, sample_rate):
         if eprop[e] == '+':
             if random.random() < sample_rate:
                 g.add_edge(e.source(), e.target())
+            if random.random() < sample_rate:
                 g.add_edge(e.target(), e.source())
-            else:
-                if random.random() < 0.5:
-                    g.add_edge(e.target(), e.source())
-                else:
-                    g.add_edge(e.source(), e.target())
     return g
 
 def _sample_edges(graph, sample_rate):
@@ -94,9 +80,15 @@ def _get_seeds_by_name(graph, seeds):
             seed_vs.append(v)
     return seed_vs
 
-def random_trust_graph(edge_sample_rate):
+def random_trust_graph(edge_sample_rate, graph_type):
     num_seeds = 4
-    random_graph = load_graph('data/random/random_1.dot')
+
+    if graph_type == RANDOM_GRAPH:
+        random_graph = load_graph('data/random/random_1.dot')
+    if graph_type == LARGE_RANDOM_GRAPH:
+        random_graph = load_graph('data/random/random_4.dot')
+    if graph_type == SMALL_RANDOM_GRAPH:
+        random_graph = load_graph('data/random/random_0.25.dot')
 
     seeds = _get_seeds(random_graph, num_seeds)
     graph = _normalize_random_graph(random_graph, edge_sample_rate)
@@ -133,51 +125,51 @@ def plot_prop(title, x, y, log_scale=False):
 
 def get_property(graph_type, edge_sample_rate, property_type, comments):
     print "Initializing graph..."
-    if graph_type == RANDOM_GRAPH:
-        graph = random_trust_graph(edge_sample_rate)
     if graph_type == ADVOGATO_GRAPH:
         graph = advogato_trust_graph(edge_sample_rate)
+    else:
+        graph = random_trust_graph(edge_sample_rate, graph_type)
     seed = graph.seed
     graph = graph.graph
 
     print "Preparing property..."
     if property_type == IN_DEGREE_DISTRIBUTION:
         dd = vertex_hist(graph, "in")
-        plot_prop("In Degree Distribution - %s" % print_graph_type(graph_type), dd[1][:-1], dd[0], True)
+        plot_prop("%s - %s" % (print_property_type(property_type), print_graph_type(graph_type)), dd[1][:-1], dd[0], True)
     if property_type == OUT_DEGREE_DISTRIBUTION:
         dd = vertex_hist(graph, "out")
-        plot_prop("Out Degree Distribution - %s" % print_graph_type(graph_type), dd[1][:-1], dd[0], True)
+        plot_prop("%s - %s" % (print_property_type(property_type), print_graph_type(graph_type)), dd[1][:-1], dd[0], True)
     if property_type == LOCAL_CLUSTERING_COEFFICIENT:
         clust = local_clustering(graph)
         x = range(graph.num_vertices())
         y = sorted(clust.get_array(), reverse=True)
-        plot_prop("Clustering Coefficient - %s" % print_graph_type(graph_type), x, y)
+        plot_prop("%s - %s" % (print_property_type(property_type), print_graph_type(graph_type)), x, y)
     if property_type == GLOBAL_CLUSTERING_COEFFICIENT:
-        print global_clustering(graph)
+        print "%s: %f" % (print_property_type(property_type), global_clustering(graph)[0])
     if property_type == DISTANCES:
         diameters = []
         for v in graph.vertices():
             diameters.append(pseudo_diameter(graph, v)[0])
         x = range(graph.num_vertices())
         y = sorted(diameters, reverse=True)
-        plot_prop("Diameters Distribution - %s" % print_graph_type(graph_type), x, y)
+        plot_prop("%s - %s" % (print_property_type(property_type), print_graph_type(graph_type)), x, y)
     if property_type == SEED_DISTANCES:
         distances = shortest_distance(graph, source=seed)
         distances = [(dist if dist < 2147483647 else 0) for dist in distances.get_array()]
         x = range(graph.num_vertices())
         y = sorted(distances, reverse=True)
-        plot_prop("Seed-to-Node Shortest Path Distribution - %s" % print_graph_type(graph_type), x, y)
+        plot_prop("%s - %s" % (print_property_type(property_type), print_graph_type(graph_type)), x, y)
     if property_type == ESTIMATED_DIAMETER:
         max_diamater = 0
         for source in numpy.random.choice(range(graph.num_vertices()), 100, replace=False):
             max_diamater = max(max_diamater, pseudo_diameter(graph, source)[0])
-        print max_diamater
+        print "%s: %d" % (print_property_type(property_type), max_diamater)
     if property_type == PERCENT_BY_DIRECTIONAL_EDGE:
         num_by_directional_edge = 0
         for e in graph.edges():
             if graph.edge(e.target(), e.source()) != None:
                 num_by_directional_edge += 1
-        print float(num_by_directional_edge)/graph.num_edges()
+        print "%s: %f" % (print_property_type(property_type), float(num_by_directional_edge)/graph.num_edges())
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -192,9 +184,14 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--property', type=int, default=1)
     # RANDOM_GRAPH, ADVOGATO_GRAPH = 1, 2
     parser.add_argument('-g', '--graph', type=int, default=1)
-    parser.add_argument('-r', '--sample', type=float, default=1.0)
+    parser.add_argument('-r', '--sample', type=float)
     parser.add_argument('-c', '--comments', default='')
     args = parser.parse_args()
+
+    if args.sample == None:
+        args.sample = 1.0 if (args.graph == ADVOGATO_GRAPH) else 0.5
+
+    print 'Sampling at %f' % args.sample
 
     if args.property == 0:
         for p in range(1, 9):
