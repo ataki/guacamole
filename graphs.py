@@ -182,7 +182,6 @@ if __name__ == '__main__':
     # ESTIMATED_DIAMETER = 7
     # PERCENT_BY_DIRECTIONAL_EDGE = 8
     parser.add_argument('-p', '--property', type=int, default=1)
-    # RANDOM_GRAPH, ADVOGATO_GRAPH = 1, 2
     parser.add_argument('-g', '--graph', type=int, default=1)
     parser.add_argument('-r', '--sample', type=float)
     parser.add_argument('-c', '--comments', default='')

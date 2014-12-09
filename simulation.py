@@ -85,7 +85,6 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--scale', type=int, default=1)
     # DELETE, REVERSE, TARGETED = 1, 2, 3
     parser.add_argument('-m', '--mode', type=int, default=1)
-    # RANDOM_GRAPH, ADVOGATO_GRAPH = 1, 2
     parser.add_argument('-g', '--graph', type=int, default=1)
     parser.add_argument('-r', '--sample', type=float)
     parser.add_argument('-e', '--num_experiments', type=int, default=100)
