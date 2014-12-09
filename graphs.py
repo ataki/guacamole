@@ -85,16 +85,18 @@ def random_trust_graph(edge_sample_rate, graph_type):
 
     if graph_type == RANDOM_GRAPH:
         random_graph = load_graph('data/random/random_1.dot')
+        capacities = [800 * num_seeds, 200, 200, 50, 12, 4, 2, 1]
     if graph_type == LARGE_RANDOM_GRAPH:
         random_graph = load_graph('data/random/random_4.dot')
+        capacities = [3200 * num_seeds, 800, 800, 200, 48, 16, 8, 4, 2, 1]
     if graph_type == SMALL_RANDOM_GRAPH:
         random_graph = load_graph('data/random/random_0.25.dot')
+        capacities = [200 * num_seeds, 50, 50, 12, 4, 2, 1]
 
     seeds = _get_seeds(random_graph, num_seeds)
     graph = _normalize_random_graph(random_graph, edge_sample_rate)
 
     seed_v = _transform_virtual_seed(graph, seeds)
-    capacities = [800 * num_seeds, 200, 200, 50, 12, 4, 2, 1]
     return TrustGraph(graph, seed_v, capacities)
 
 def advogato_trust_graph(edge_sample_rate):
