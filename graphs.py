@@ -108,7 +108,7 @@ def advogato_trust_graph(edge_sample_rate):
     return TrustGraph(graph, seed_v, capacities)
 
 FIGURE_DIR = 'figures/'
-def plot_prop(title, x, y, log_scale=False):
+def plot_prop(title, x, y, x_label, y_label, log_scale=False):
     current_time = datetime.datetime.now().strftime("%H:%M:%S")
     g = Gnuplot.Gnuplot()
     g.title(title)
@@ -120,8 +120,8 @@ def plot_prop(title, x, y, log_scale=False):
         g('set mxtics 10')
         g('set format y "10^{%L}"')
         g('set mytics 10')
-    g.xlabel('false positives')
-    g.ylabel('true positives')
+    g.xlabel(x_label)
+    g.ylabel(y_lbael)
     data = Gnuplot.Data(x, y, with_='linespoints pt 6')
     g.plot(data)
 
@@ -137,15 +137,24 @@ def get_property(graph_type, edge_sample_rate, property_type, comments):
     print "Preparing property..."
     if property_type == IN_DEGREE_DISTRIBUTION:
         dd = vertex_hist(graph, "in")
-        plot_prop("%s - %s" % (print_property_type(property_type), print_graph_type(graph_type)), dd[1][:-1], dd[0], True)
+        plot_prop("%s - %s" % (print_property_type(property_type), print_graph_type(graph_type)),
+            dd[1][:-1], dd[0],
+            'node degrees',
+            '# nodes',
+            True)
     if property_type == OUT_DEGREE_DISTRIBUTION:
         dd = vertex_hist(graph, "out")
-        plot_prop("%s - %s" % (print_property_type(property_type), print_graph_type(graph_type)), dd[1][:-1], dd[0], True)
+        plot_prop("%s - %s" % (print_property_type(property_type), print_graph_type(graph_type)),
+            dd[1][:-1], dd[0],
+            'node degrees',
+            '# nodes',
+            True)
     if property_type == LOCAL_CLUSTERING_COEFFICIENT:
         clust = local_clustering(graph)
         x = range(graph.num_vertices())
         y = sorted(clust.get_array(), reverse=True)
-        plot_prop("%s - %s" % (print_property_type(property_type), print_graph_type(graph_type)), x, y)
+        plot_prop("%s - %s" % (print_property_type(property_type), print_graph_type(graph_type)),
+            x, y, 'nodes', 'clustering coefficients')
     if property_type == GLOBAL_CLUSTERING_COEFFICIENT:
         print "%s: %f" % (print_property_type(property_type), global_clustering(graph)[0])
     if property_type == DISTANCES:
@@ -154,13 +163,15 @@ def get_property(graph_type, edge_sample_rate, property_type, comments):
             diameters.append(pseudo_diameter(graph, v)[0])
         x = range(graph.num_vertices())
         y = sorted(diameters, reverse=True)
-        plot_prop("%s - %s" % (print_property_type(property_type), print_graph_type(graph_type)), x, y)
+        plot_prop("%s - %s" % (print_property_type(property_type), print_graph_type(graph_type)),
+            x, y, 'sources', 'estimated distances')
     if property_type == SEED_DISTANCES:
         distances = shortest_distance(graph, source=seed)
         distances = [(dist if dist < 2147483647 else 0) for dist in distances.get_array()]
         x = range(graph.num_vertices())
         y = sorted(distances, reverse=True)
-        plot_prop("%s - %s" % (print_property_type(property_type), print_graph_type(graph_type)), x, y)
+        plot_prop("%s - %s" % (print_property_type(property_type), print_graph_type(graph_type)),
+            x, y, 'destination nodes', 'distances')
     if property_type == ESTIMATED_DIAMETER:
         max_diamater = 0
         for source in numpy.random.choice(range(graph.num_vertices()), 100, replace=False):
@@ -171,7 +182,8 @@ def get_property(graph_type, edge_sample_rate, property_type, comments):
         for e in graph.edges():
             if graph.edge(e.target(), e.source()) != None:
                 num_by_directional_edge += 1
-        print "%s: %f" % (print_property_type(property_type), float(num_by_directional_edge)/graph.num_edges())
+        print "%s: %f" % (print_property_type(property_type),
+            float(num_by_directional_edge)/graph.num_edges())
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
