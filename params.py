@@ -21,6 +21,11 @@ PERCENT_BY_DIRECTIONAL_EDGE = 8
 AVERAGE_OUT_DEGREE_PER_LEVEL = 9
 TRIADS = 10
 
+# sampling result type
+TRUE_POSITIVES = 1
+MAX_SCC_SIZE = 2
+SEED_SCC_SIZE = 3
+
 def print_graph_type(graph_type):
     return {
         ADVOGATO_GRAPH: 'advogato graph',
@@ -49,3 +54,10 @@ def print_property_type(property_mode):
         AVERAGE_OUT_DEGREE_PER_LEVEL: 'Average Out-Degree per Distance Level',
         TRIADS: 'Percentage of Triads'
     }[property_mode]
+
+def print_sample_mode(sample_mode):
+    return {
+        TRUE_POSITIVES: 'true positives',
+        MAX_SCC_SIZE: 'max scc size',
+        SEED_SCC_SIZE: 'seed scc size'
+    }[sample_mode]

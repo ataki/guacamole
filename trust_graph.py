@@ -33,6 +33,8 @@ class TrustGraph:
         self.distances = {}
         bfs_search(self.graph, self.seed, DistanceVisitor(self.distances, self.seed))
         self.trusted_nodes = None
+        self.max_scc_size = None
+        self.seed_scc_size = None
 
     def get_trusted_nodes(self):
         if self.trusted_nodes == None:
@@ -41,6 +43,16 @@ class TrustGraph:
 
     def sample_compromised_nodes(self, sample_size):
         return _sample_by_distance(self.distances, sample_size, 1)[0]
+
+    def get_max_scc_size(self):
+        if self.max_scc_size == None:
+            self.max_scc_size = list(label_largest_component(self.graph, directed=True).get_array()).count(1)
+        return self.max_scc_size
+
+    def get_seed_scc_size(self):
+        if self.seed_scc_size == None:
+            self.seed_scc_size = list(label_out_component(self.graph, self.seed).get_array()).count(1)
+        return self.seed_scc_size
 
     def get_attacked_graph(self, attack_scale, attack_mode):
         attacked_graph = Graph(self.graph)

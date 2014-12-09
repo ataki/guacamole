@@ -30,9 +30,10 @@ class SimulationLogger:
             'percent_edge_compromised': percent_edge_compromised
         }
 
-    def add_subsampling_configuration(self, graph_type, edge_sample_rate, minimal_sample_rate, sample_interval):
+    def add_subsampling_configuration(self, graph_type, sample_mode, edge_sample_rate, minimal_sample_rate, sample_interval):
         self.data['configuration'] = {
             'graph_type': print_graph_type(graph_type),
+            'sample_mode': print_sample_mode(sample_mode),
             'edge_sample_rate': edge_sample_rate,
             'minimal_sample_rate': minimal_sample_rate,
             'sample_interval': sample_interval

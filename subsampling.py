@@ -14,9 +14,9 @@ def _true_positives(result, trusted_nodes):
 
     return float(count)/len(trusted_nodes)
 
-def _subsampling(graph_type, edge_sample_rate, minimal_sample_rate, sample_interval):
+def _subsampling(graph_type, sample_mode, edge_sample_rate, minimal_sample_rate, sample_interval):
     logger = SimulationLogger()
-    logger.add_subsampling_configuration(graph_type, edge_sample_rate, minimal_sample_rate, sample_interval)
+    logger.add_subsampling_configuration(graph_type, sample_mode, edge_sample_rate, minimal_sample_rate, sample_interval)
 
     print 'Initializing graph...'
     if graph_type == ADVOGATO_GRAPH:
@@ -32,29 +32,39 @@ def _subsampling(graph_type, edge_sample_rate, minimal_sample_rate, sample_inter
         deleted_percentages.append(1.0 - rate)
         print "Sampling at %f..." % rate
         attacked_graph = graph.get_sampled_graph(rate)
-        results.append(attacked_graph.get_trusted_nodes())
+        
+        if sample_mode == TRUE_POSITIVES:
+            true_positive = _true_positives(attacked_graph.get_trusted_nodes(), graph.get_trusted_nodes())
+            results.append(true_positive)
+        
+        if sample_mode == MAX_SCC_SIZE:
+            results.append(attacked_graph.get_max_scc_size())
 
-    trusted_nodes = graph.get_trusted_nodes()
-    true_positives = [_true_positives(result, trusted_nodes) for result in results]
+        if sample_mode == SEED_SCC_SIZE:
+            results.append(attacked_graph.get_seed_scc_size())
 
-    for (rate, true_positive) in zip(deleted_percentages, true_positives):
-        logger.add_sample(rate, true_positive)
+    for (rate, result) in zip(deleted_percentages, results):
+        logger.add_sample(rate, result)
 
     print 'Logging...'
     logger.write()
     print 'Plotting...'
-    logger.plot_subsampling('%s: Subsampling' % print_graph_type(graph_type),
-        deleted_percentages, true_positives,
-        'percentage of edges removed', 'true positives')
+    logger.plot_subsampling('%s: Subsampling - %s' % (print_graph_type(graph_type), print_sample_mode(sample_mode)),
+        deleted_percentages, results,
+        'percentage of edges removed', print_sample_mode(sample_mode))
 
 FIGURE_DIR = 'subsampling/'
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-g', '--graph', type=int, default=1)
-    parser.add_argument('-m', '--minimal_sample_rate', type=float, default=0.0)
+    # TRUE_POSITIVES = 1
+    # MAX_SCC_SIZE = 2
+    # SEED_SCC_SIZE = 3
+    parser.add_argument('-m', '--sample_mode', type=int, default=1)
+    parser.add_argument('-r', '--minimal_sample_rate', type=float, default=0.0)
     parser.add_argument('-i', '--sample_interval', type=float, default=0.1)
     parser.add_argument('-c', '--comments', default='')
     args = parser.parse_args()
 
     edge_sample_rate = 1.0 if (args.graph == ADVOGATO_GRAPH) else 0.5
-    _subsampling(args.graph, edge_sample_rate, args.minimal_sample_rate, args.sample_interval)
+    _subsampling(args.graph, args.sample_mode, edge_sample_rate, args.minimal_sample_rate, args.sample_interval)
