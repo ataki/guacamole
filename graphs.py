@@ -1,9 +1,15 @@
 from trust_graph import TrustGraph
+from params import *
 
+import datetime
 import heapq
 import math
 import random
 from graph_tool.all import *
+import argparse
+
+import Gnuplot
+Gnuplot.GnuplotOpts.default_term = 'png'
 
 # Modifies the graph, converts all vertices in seeds into one virtual seed vertex.
 def _transform_virtual_seed(graph, seeds):
@@ -91,3 +97,74 @@ def advogato_trust_graph(edge_sample_rate):
     seed_v = _transform_virtual_seed(graph, seeds)
     capacities = [800 * 4, 200, 200, 50, 12, 4, 2, 1]
     return TrustGraph(graph, seed_v, capacities)
+
+FIGURE_DIR = 'figures/'
+def plot_prop(title, x, y, log_scale=False):
+    current_time = datetime.datetime.now().strftime("%H:%M:%S")
+    g = Gnuplot.Gnuplot()
+    g.title(title)
+    g('set output \'%s\'' % (FIGURE_DIR + ('plot-%s.png' % current_time)))
+    g('set grid')
+    if log_scale:
+        g('set logscale xy 10')
+        g('set format x "10^{%L}"')
+        g('set mxtics 10')
+        g('set format y "10^{%L}"')
+        g('set mytics 10')
+    g.xlabel('false positives')
+    g.ylabel('true positives')
+    data = Gnuplot.Data(x, y, with_='linespoints pt 6')
+    g.plot(data)
+
+def get_property(graph_type, edge_sample_rate, property_type, comments):
+    print "Initializing graph..."
+    if graph_type == RANDOM_GRAPH:
+        graph = random_trust_graph(edge_sample_rate)
+    if graph_type == ADVOGATO_GRAPH:
+        graph = advogato_trust_graph(edge_sample_rate)
+    seed = graph.seed
+    graph = graph.graph
+
+    print "Preparing property..."
+    if property_type == IN_DEGREE_DISTRIBUTION:
+        dd = vertex_hist(graph, "in")
+        plot_prop("In Degree Distribution - %s" % print_graph_type(graph_type), dd[1][:-1], dd[0], True)
+    if property_type == OUT_DEGREE_DISTRIBUTION:
+        dd = vertex_hist(graph, "out")
+        plot_prop("Out Degree Distribution - %s" % print_graph_type(graph_type), dd[1][:-1], dd[0], True)
+    if property_type == LOCAL_CLUSTERING_COEFFICIENT:
+        clust = local_clustering(graph)
+        x = range(graph.num_vertices())
+        y = sorted(clust.get_array(), reverse=True)
+        plot_prop("Clustering Coefficient - %s" % print_graph_type(graph_type), x, y)
+    if property_type == GLOBAL_CLUSTERING_COEFFICIENT:
+        print global_clustering(graph)
+    if property_type == DISTANCES:
+        diameters = []
+        for v in graph.vertices():
+            diameters.append(pseudo_diameter(graph, v)[0])
+        x = range(graph.num_vertices())
+        y = sorted(diameters, reverse=True)
+        plot_prop("Diameters Distribution - %s" % print_graph_type(graph_type), x, y)
+    if property_type == SEED_DISTANCES:
+        distances = shortest_distance(graph, source=seed)
+        distances = [(dist if dist < 2147483647 else 0) for dist in distances.get_array()]
+        x = range(graph.num_vertices())
+        y = sorted(distances, reverse=True)
+        plot_prop("Seed-to-Node Shortest Path Distribution - %s" % print_graph_type(graph_type), x, y)
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    # IN_DEGREE_DISTRIBUTION = 1
+    # OUT_DEGREE_DISTRIBUTION = 2
+    # LOCAL_CLUSTERING_COEFFICIENT = 3
+    # GLOBAL_CLUSTERING_COEFFICIENT = 4
+    # DISTANCES = 5
+    parser.add_argument('-p', '--property', type=int, default=1)
+    # RANDOM_GRAPH, ADVOGATO_GRAPH = 1, 2
+    parser.add_argument('-g', '--graph', type=int, default=1)
+    parser.add_argument('-r', '--sample', type=float, default=1.0)
+    parser.add_argument('-c', '--comments', default='')
+    args = parser.parse_args()
+
+    get_property(args.graph, args.sample, args.property, args.comments)
