@@ -14,7 +14,6 @@ class SimulationLogger:
         current_time = datetime.datetime.now().strftime("%H:%M:%S")
         self.log = LOG_DIR + ('log-%s' % current_time)
         self.plot = PLOT_DIR + ('plot-%s.png' % current_time)
-        open(self.log, 'a')
         self.data = {}
         self.comment = ''
 
@@ -30,6 +29,19 @@ class SimulationLogger:
             'edge_sample_rate': edge_sample_rate,
             'percent_edge_compromised': percent_edge_compromised
         }
+
+    def add_subsampling_configuration(self, graph_type, edge_sample_rate, minimal_sample_rate, sample_interval):
+        self.data['configuration'] = {
+            'graph_type': print_graph_type(graph_type),
+            'edge_sample_rate': edge_sample_rate,
+            'minimal_sample_rate': minimal_sample_rate,
+            'sample_interval': sample_interval
+        }
+
+    def add_sample(self, sample_rate, true_positives):
+        if 'samples' not in self.data:
+            self.data['samples'] = {}
+        self.data['samples'][sample_rate] = true_positives
 
     def add_plotting_data(self, x, y):
         self.data['plot'] = {
@@ -56,5 +68,15 @@ class SimulationLogger:
         g('set grid')
         g.xlabel('false positives')
         g.ylabel('true positives')
+        data = Gnuplot.Data(x, y, with_='linespoints pt 6')
+        g.plot(data)
+
+    def plot_subsampling(self, title, x, y, x_label, y_label):
+        g = Gnuplot.Gnuplot()
+        g.title(title)
+        g('set output \'%s\'' % self.plot)
+        g('set grid')
+        g.xlabel(x_label)
+        g.ylabel(y_label)
         data = Gnuplot.Data(x, y, with_='linespoints pt 6')
         g.plot(data)

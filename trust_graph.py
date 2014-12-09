@@ -2,6 +2,7 @@ import metrics
 from params import *
 
 import numpy
+import random
 
 from graph_tool.all import *
 
@@ -67,3 +68,13 @@ class TrustGraph:
                         attacked_graph.add_edge(v, w)
 
         return TrustGraph(attacked_graph, self.seed, self.capacities), edges_modified
+
+    def get_sampled_graph(self, sample_rate):
+        attacked_graph = Graph()
+        attacked_graph.add_vertex(self.graph.num_vertices())
+
+        for e in self.graph.edges():
+            if random.random() < sample_rate:
+                attacked_graph.add_edge(e.source(), e.target())
+
+        return TrustGraph(attacked_graph, self.seed, self.capacities)

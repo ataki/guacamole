@@ -91,7 +91,7 @@ def random_trust_graph(edge_sample_rate, graph_type):
     num_seeds = 4
 
     if graph_type == RANDOM_GRAPH:
-        random_graph = load_graph('data/random/random_1.dot')
+        random_graph = load_graph('data/random/random.dot')
         capacities = [800 * num_seeds, 200, 200, 50, 12, 4, 2, 1]
     if graph_type == LARGE_RANDOM_GRAPH:
         random_graph = load_graph('data/random/random_4.dot')
@@ -213,7 +213,7 @@ def get_property(graph_type, edge_sample_rate, property_type, comments):
             range(1, max_dist), average_out_degree[1:], 'distances from seed', 'average out degree')
 
     if property_type == TRIADS:
-        sample_size = 100000
+        sample_size = 10000000
         num_triads = 0
         for i in range(sample_size):
             triad = numpy.random.choice(range(graph.num_vertices()), 3, replace=False)

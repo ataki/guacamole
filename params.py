@@ -1,5 +1,7 @@
 # attack mode
-DELETE, REVERSE, TARGETED = 1, 2, 3
+DELETE = 1
+REVERSE = 2
+TARGETED = 3
 
 # graph type
 ADVOGATO_GRAPH = 1
