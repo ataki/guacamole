@@ -2,7 +2,7 @@ import os
 import simplejson as json
 from matplotlib import pyplot as plt
 
-styls = ['r-', 'g-', 'b-', 'k-']
+styls = ['ro-', 'go-', 'bo-', 'ko-']
 data_map = {}
 
 for filename in os.listdir("logs"):
@@ -39,15 +39,18 @@ for filename in os.listdir("logs"):
         data_map[pk] = graph_type_data
 
 for graph_type in data_map.keys():
-    plt.clf()
     attack_modes = data_map[graph_type].keys()
     for i, attack_mode in enumerate(attack_modes):
+        plt.clf()
         attack_scales = data_map[graph_type][attack_mode]
-        style = styls[i]
-        for attack_scale in attack_scales:
+        for j, attack_scale in enumerate(attack_scales):
+            style = styls[j]
             xs, ys = data_map[graph_type][attack_mode][attack_scale]
-            plt.plot(xs, ys, style, label="%s %f" % (attack_mode, attack_scale))
-    graph_type = graph_type.replace(" ", "-").replace(".", "")
-    plt.title(graph_type)
-    plt.legend(loc='lower right', fontsize='small')
-    plt.savefig("%s-roc.png" % graph_type)
+            plt.plot(xs, ys, style, label="%s compromised nodes" % attack_scale, markerfacecolor="None", markeredgewidth=1, markeredgecolor=style[0])
+        plt.plot([0, 1], [0, 1], 'k--')
+        outfilename = graph_type.replace(" ", "-").replace(".", "") + "-" + attack_mode.replace(".", "")
+        plt.title("%s, %s" % (graph_type, attack_mode))
+        plt.legend(loc='lower right', fontsize='medium')
+        plt.ylabel("True Positive Rate")
+        plt.xlabel("False Positive Rate")
+        plt.savefig("%s-roc.png" % outfilename)
