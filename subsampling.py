@@ -21,7 +21,9 @@ def _subsampling(graph_type, sample_mode, edge_sample_rate, minimal_sample_rate,
     print 'Initializing graph...'
     if graph_type == ADVOGATO_GRAPH:
         graph = graphs.advogato_trust_graph(edge_sample_rate)
-    else:
+    if graph_type == WIKI_GRAPH:
+        graph = graphs.wiki_trust_graph(edge_sample_rate)
+    if graph_type == RANDOM_GRAPH or graph_type == LARGE_RANDOM_GRAPH or graph_type == SMALL_RANDOM_GRAPH:
         graph = graphs.random_trust_graph(edge_sample_rate, graph_type)
 
     deleted_percentages = []
@@ -66,5 +68,5 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--comments', default='')
     args = parser.parse_args()
 
-    edge_sample_rate = 1.0 if (args.graph == ADVOGATO_GRAPH) else 0.5
+    edge_sample_rate = 1.0 if (args.graph == ADVOGATO_GRAPH or args.graph == WIKI_GRAPH) else 0.5
     _subsampling(args.graph, args.sample_mode, edge_sample_rate, args.minimal_sample_rate, args.sample_interval)

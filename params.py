@@ -8,6 +8,7 @@ ADVOGATO_GRAPH = 1
 RANDOM_GRAPH = 2
 LARGE_RANDOM_GRAPH = 3
 SMALL_RANDOM_GRAPH =  4
+WIKI_GRAPH = 5
 
 # property type
 IN_DEGREE_DISTRIBUTION = 1
@@ -35,7 +36,8 @@ def print_graph_type(graph_type):
         ADVOGATO_GRAPH: 'advogato graph',
         RANDOM_GRAPH: 'random graph',
         LARGE_RANDOM_GRAPH: '4x random graph',
-        SMALL_RANDOM_GRAPH: '0.25x random graph'
+        SMALL_RANDOM_GRAPH: '0.25x random graph',
+        WIKI_GRAPH: 'wiki graph'
     }[graph_type]
 
 def print_attack_mode(attack_mode):

@@ -28,22 +28,25 @@ def _transform_virtual_seed(graph, seeds):
 
     return seed_v
 
-def _seed_score(graph, v):
+def _seed_score(graph, v, directed):
     eprop = graph.edge_properties['label']
     num_pos_edges, num_neg_edges = 0, 0
     # graph is undirected, so out_edges is equivalent of in_edges.
-    for e in v.out_edges():
+    
+    related_edges = v.in_edges() if directed else v.out_edges()
+    for e in related_edges:
         if eprop[e] == '+':
             num_pos_edges += 1
         if eprop[e] == '-':
             num_neg_edges += 1
 
-    return (float(num_pos_edges) / float(num_pos_edges + num_neg_edges)) * math.sqrt(num_pos_edges)
+    total_in_edges = num_pos_edges + num_neg_edges
+    return (float(num_pos_edges) / total_in_edges) * math.sqrt(num_pos_edges) if total_in_edges > 0 else 0.0
 
-def _get_seeds(graph, num_seeds):
+def _get_seeds(graph, num_seeds, directed=False):
     seeds = []
     for v in graph.vertices():
-        v_trust = _seed_score(graph, v)
+        v_trust = _seed_score(graph, v, directed)
         if len(seeds) < num_seeds:
             heapq.heappush(seeds, (v_trust, v))
         else:
@@ -52,6 +55,15 @@ def _get_seeds(graph, num_seeds):
     assert len(seeds) == num_seeds
     return [v for v_trust, v in seeds]
 
+def _normalize_wiki_graph(graph, sample_rate):
+    g = Graph()
+    g.add_vertex(graph.num_vertices())
+    eprop = graph.edge_properties['label']
+    for e in graph.edges():
+        if eprop[e] == '+':
+            g.add_edge(e.source(), e.target())
+
+    return g
 
 def _normalize_random_graph(graph, sample_rate):
     g = Graph()
@@ -100,8 +112,20 @@ def random_trust_graph(edge_sample_rate, graph_type):
         random_graph = load_graph('data/random/random_0.25.dot')
         capacities = [200 * num_seeds, 50, 50, 12, 4, 2, 1]
 
-    seeds = _get_seeds(random_graph, num_seeds)
+    seeds = _get_seeds(random_graph, num_seeds, False)
     graph = _normalize_random_graph(random_graph, edge_sample_rate)
+
+    seed_v = _transform_virtual_seed(graph, seeds)
+    return TrustGraph(graph, seed_v, capacities)
+
+def wiki_trust_graph(edge_sample_rate):
+    num_seeds = 4
+
+    wiki_graph = load_graph('data/wiki/wiki.dot')
+    capacities = [800 * num_seeds, 200, 200, 50, 12, 4, 2, 1]
+
+    seeds = _get_seeds(wiki_graph, num_seeds, True)
+    graph = _normalize_wiki_graph(wiki_graph, edge_sample_rate)
 
     seed_v = _transform_virtual_seed(graph, seeds)
     return TrustGraph(graph, seed_v, capacities)
@@ -136,7 +160,9 @@ def get_property(graph_type, edge_sample_rate, property_type, comments):
     print "Initializing graph..."
     if graph_type == ADVOGATO_GRAPH:
         tgraph = advogato_trust_graph(edge_sample_rate)
-    else:
+    if graph_type == WIKI_GRAPH:
+        tgraph = wiki_trust_graph(edge_sample_rate)
+    if graph_type == RANDOM_GRAPH or graph_type == LARGE_RANDOM_GRAPH or graph_type == SMALL_RANDOM_GRAPH:
         tgraph = random_trust_graph(edge_sample_rate, graph_type)
     seed = tgraph.seed
     graph = tgraph.graph
@@ -235,7 +261,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.sample == None:
-        args.sample = 1.0 if (args.graph == ADVOGATO_GRAPH) else 0.5
+        args.sample = 1.0 if (args.graph == ADVOGATO_GRAPH or args.graph == WIKI_GRAPH) else 0.5
 
     if args.property == 0:
         for p in range(1, 10): # Doesn't include triads

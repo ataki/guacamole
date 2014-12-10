@@ -78,9 +78,13 @@ def run_simulation(graph_type, output_mode, attack_scale, attack_mode, edge_samp
     logger.add_comment(comment)
     
     print "Initializing graph..."
+
+    print 'Initializing graph...'
     if graph_type == ADVOGATO_GRAPH:
         graph = graphs.advogato_trust_graph(edge_sample_rate)
-    else:
+    if graph_type == WIKI_GRAPH:
+        graph = graphs.wiki_trust_graph(edge_sample_rate)
+    if graph_type == RANDOM_GRAPH or graph_type == LARGE_RANDOM_GRAPH or graph_type == SMALL_RANDOM_GRAPH:
         graph = graphs.random_trust_graph(edge_sample_rate, graph_type)
 
     trusted_nodes = graph.get_trusted_nodes()
@@ -123,7 +127,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.sample == None:
-        args.sample = 1.0 if (args.graph == ADVOGATO_GRAPH) else 0.5
+        args.sample = 1.0 if (args.graph == ADVOGATO_GRAPH or args.graph == WIKI_GRAPH) else 0.5
 
     num_experiments = args.num_experiments
     run_simulation(args.graph,  args.output_mode, args.scale, args.mode, edge_sample_rate=args.sample, comment=args.comments)
