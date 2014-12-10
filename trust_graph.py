@@ -81,6 +81,12 @@ class TrustGraph:
 
         return TrustGraph(attacked_graph, self.seed, self.capacities), edges_modified
 
+    def get_estimated_diameter(self):
+        max_diamater = 0
+        for source in numpy.random.choice(range(self.graph.num_vertices()), 100, replace=False):
+            max_diamater = max(max_diamater, pseudo_diameter(self.graph, source)[0])
+        return max_diamater
+
     def get_sampled_graph(self, sample_rate):
         attacked_graph = Graph()
         attacked_graph.add_vertex(self.graph.num_vertices())

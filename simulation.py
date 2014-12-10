@@ -4,6 +4,9 @@ from params import *
 from trust_graph import TrustGraph
 
 import argparse
+import numpy
+
+from graph_tool.all import *
 
 def _test_attack_resistance(graph, num_experiments, attack_scale, attack_mode):
     results = []
@@ -17,6 +20,22 @@ def _test_attack_resistance(graph, num_experiments, attack_scale, attack_mode):
         percent_edge_compromised.append(float(edges_modified) / graph.graph.num_edges())
 
     return results, percent_edge_compromised
+
+def _get_attacked_graph_properties(graph, num_experiments, attack_scale, attack_mode):
+    global_cc_results = []
+    estimated_distance_results = []
+
+    percent_edge_compromised = []
+
+    for i in range(num_experiments):
+        print "Test attack resistance, attack %d..." % (i + 1)
+        attacked_graph, edges_modified = graph.get_attacked_graph(attack_scale, attack_mode)
+
+        global_cc_results.append(global_clustering(attacked_graph.graph)[0])
+        estimated_distance_results.append(attacked_graph.get_estimated_diameter())
+        percent_edge_compromised.append(float(edges_modified) / graph.graph.num_edges())
+
+    return global_cc_results, estimated_distance_results, percent_edge_compromised
 
 def _accumulate_list(l):
     s = 0
@@ -54,7 +73,7 @@ def _prepare_roc_plot(trusted_nodes, results, sorted=True):
     y = [(float(e)/true_positives if true_positives > 0 else 0) for e in sorted_y]
     return x, y
 
-def run_simulation(graph_type, attack_scale, attack_mode, edge_sample_rate=1.0, comment=''):
+def run_simulation(graph_type, output_mode, attack_scale, attack_mode, edge_sample_rate=1.0, comment=''):
     logger = SimulationLogger()
     logger.add_comment(comment)
     
@@ -65,20 +84,31 @@ def run_simulation(graph_type, attack_scale, attack_mode, edge_sample_rate=1.0, 
         graph = graphs.random_trust_graph(edge_sample_rate, graph_type)
 
     trusted_nodes = graph.get_trusted_nodes()
-    results, percent_edge_compromised = _test_attack_resistance(graph, num_experiments, attack_scale, attack_mode)
-    x, y = _prepare_roc_plot(trusted_nodes, results, True)
 
-    logger.add_configuration(graph_type, attack_scale, attack_mode, edge_sample_rate, percent_edge_compromised)
-    logger.add_trusted_nodes(trusted_nodes)
-    logger.add_plotting_data(x, y)
-    for i in range(num_experiments):
-        logger.add_trusted_nodes_after_attack('attack-%d' % (i + 1), results[i])
+    if output_mode == ROC:
+        results, percent_edge_compromised = _test_attack_resistance(graph, num_experiments, attack_scale, attack_mode)
+        x, y = _prepare_roc_plot(trusted_nodes, results, True)
 
-    print "Writing to log..."
-    logger.write()
-    plot_title = '%s: %s-attack with scale %d' % (print_graph_type(graph_type), print_attack_mode(attack_mode), attack_scale)
-    print "Plotting..."
-    logger.plot_roc(plot_title, x, y)
+        logger.add_configuration(graph_type, attack_scale, attack_mode, edge_sample_rate, percent_edge_compromised)
+        logger.add_trusted_nodes(trusted_nodes)
+        logger.add_plotting_data(x, y)
+        for i in range(num_experiments):
+            logger.add_trusted_nodes_after_attack('attack-%d' % (i + 1), results[i])
+
+        print "Writing to log..."
+        logger.write()
+        plot_title = '%s: %s-attack with scale %d' % (print_graph_type(graph_type), print_attack_mode(attack_mode), attack_scale)
+        print "Plotting..."
+        logger.plot_roc(plot_title, x, y)
+    
+    if output_mode == PROPERTIES:
+        global_cc_results, estimated_distance_results, percent_edge_compromised = _get_attacked_graph_properties(graph, num_experiments, attack_scale, attack_mode)
+
+        logger.add_configuration(graph_type, attack_scale, attack_mode, edge_sample_rate, percent_edge_compromised)
+        logger.add_properties(numpy.mean(global_cc_results), numpy.mean(estimated_distance_results))
+
+        print "Writing to log..."
+        logger.write()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -87,6 +117,7 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--mode', type=int, default=1)
     parser.add_argument('-g', '--graph', type=int, default=1)
     parser.add_argument('-r', '--sample', type=float)
+    parser.add_argument('-o', '--output_mode', type=int, default=1)
     parser.add_argument('-e', '--num_experiments', type=int, default=100)
     parser.add_argument('-c', '--comments', default='')
     args = parser.parse_args()
@@ -95,4 +126,4 @@ if __name__ == '__main__':
         args.sample = 1.0 if (args.graph == ADVOGATO_GRAPH) else 0.5
 
     num_experiments = args.num_experiments
-    run_simulation(args.graph, args.scale, args.mode, edge_sample_rate=args.sample, comment=args.comments)
+    run_simulation(args.graph,  args.output_mode, args.scale, args.mode, edge_sample_rate=args.sample, comment=args.comments)

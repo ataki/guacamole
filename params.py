@@ -26,6 +26,10 @@ TRUE_POSITIVES = 1
 MAX_SCC_SIZE = 2
 SEED_SCC_SIZE = 3
 
+# output type
+ROC = 1
+PROPERTIES = 2 # overlay plot clustering coefficient and seed distance, global clustering coefficient, estimated_distance
+
 def print_graph_type(graph_type):
     return {
         ADVOGATO_GRAPH: 'advogato graph',
@@ -61,3 +65,9 @@ def print_sample_mode(sample_mode):
         MAX_SCC_SIZE: 'max scc size',
         SEED_SCC_SIZE: 'seed scc size'
     }[sample_mode]
+
+def print_output_mode(output_mode):
+    return {
+        ROC: 'roc',
+        PROPERTIES: 'properties'
+    }

@@ -135,11 +135,11 @@ def plot_prop(title, x, y, x_label, y_label, log_scale=False):
 def get_property(graph_type, edge_sample_rate, property_type, comments):
     print "Initializing graph..."
     if graph_type == ADVOGATO_GRAPH:
-        graph = advogato_trust_graph(edge_sample_rate)
+        tgraph = advogato_trust_graph(edge_sample_rate)
     else:
-        graph = random_trust_graph(edge_sample_rate, graph_type)
-    seed = graph.seed
-    graph = graph.graph
+        tgraph = random_trust_graph(edge_sample_rate, graph_type)
+    seed = tgraph.seed
+    graph = tgraph.graph
 
     print "Preparing property..."
     if property_type == IN_DEGREE_DISTRIBUTION:
@@ -186,10 +186,7 @@ def get_property(graph_type, edge_sample_rate, property_type, comments):
             x, y, 'destination nodes', 'distances')
     
     if property_type == ESTIMATED_DIAMETER:
-        max_diamater = 0
-        for source in numpy.random.choice(range(graph.num_vertices()), 100, replace=False):
-            max_diamater = max(max_diamater, pseudo_diameter(graph, source)[0])
-        print "%s: %d" % (print_property_type(property_type), max_diamater)
+        print "%s: %d" % (print_property_type(property_type), tgraph.get_estimated_diameter())
     
     if property_type == PERCENT_BY_DIRECTIONAL_EDGE:
         num_by_directional_edge = 0
@@ -241,7 +238,7 @@ if __name__ == '__main__':
         args.sample = 1.0 if (args.graph == ADVOGATO_GRAPH) else 0.5
 
     if args.property == 0:
-        for p in range(1, 11):
+        for p in range(1, 10): # Doesn't include triads
             get_property(args.graph, args.sample, p, args.comments)
     else:
         get_property(args.graph, args.sample, args.property, args.comments)

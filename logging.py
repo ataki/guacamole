@@ -58,6 +58,12 @@ class SimulationLogger:
             self.data['add_trusted_nodes_after_attack'] = {}
         self.data['add_trusted_nodes_after_attack'][attack_id] = [int(node) for node in trusted_nodes]
 
+    def add_properties(self, average_global_cc, average_estimated_diameter):
+        if 'attacked_graph_property' not in self.data:
+            self.data['attacked_graph_property'] = {}
+        self.data['attacked_graph_property']['global_cc'] = average_global_cc
+        self.data['attacked_graph_property']['estimated_diameter'] = average_estimated_diameter
+
     def write(self):
         with open(self.log, 'a') as log:
              json.dump(self.data, log, indent=4)
